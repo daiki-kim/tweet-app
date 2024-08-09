@@ -1,0 +1,61 @@
+version: '3.9'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - ${DB_HOST}:${DB_PORT}
+    environment:
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "mysql"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: always
+    volumes:
+      - ./backend/external-apps/db/:/docker-entrypoint-initdb.d
+    networks:
+      - tweet_app_network
+
+  mysql-cli:
+    image: mysql:8.0
+    command: mysql -hmysql -u${DB_USER} -p${DB_PASSWORD} ${DB_NAME}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - tweet_app_network
+
+  backend:
+    build:
+      context: ./backend
+    image: tweet-app-backend
+    container_name: tweet_app_backend
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_NAME}
+      DB_HOST: mysql
+    ports:
+      - 8080:8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+    networks:
+      - tweet_app_network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://0.0.0.0:8080/health"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+      start_period: 3s
+
+networks:
+  tweet_app_network:
+    driver: bridge
