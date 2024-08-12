@@ -4,20 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
-	"github.com/daiki-kim/tweet-app/configs"
+	"github.com/daiki-kim/tweet-app/backend/configs"
 )
-
-func add(a, b int) int {
-	return a + b
-}
 
 func main() {
 	r := gin.Default()
 
-	configs.InitializeAppConfig()
+	configs.LoadAppConfig()
 
-	r.POST("/google_login", controllers.GoogleLogin)
-	r.POST("/google_callback", controllers.GoogleCallback)
+	r.GET("/google_login", controllers.GoogleLogin)
+	r.GET("/google_callback", controllers.GoogleCallback)
 
 	r.Run()
 }

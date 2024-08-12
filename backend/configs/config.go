@@ -37,9 +37,9 @@ func LoadEnv() error {
 	return nil
 }
 
-func NewGoogleConfig() oauth2.Config {
+func NewAppConfig() oauth2.Config {
 	AppConfig.GoogleLoginConfig = oauth2.Config{
-		RedirectURL:  GetEnvDefault("GOOGLE_REDIRECT_URL", "http://localhost:8080/google/callback"),
+		RedirectURL:  GetEnvDefault("GOOGLE_REDIRECT_URL", "http://localhost:8080/google_callback"),
 		ClientID:     GetEnvDefault("GOOGLE_CLIENT_ID", ""),
 		ClientSecret: GetEnvDefault("GOOGLE_CLIENT_SECRET", ""),
 		Scopes:       []string{GOOGLE_EMAIL_SCOPE, GOOGLE_PROFILE_SCOPE},
@@ -49,11 +49,11 @@ func NewGoogleConfig() oauth2.Config {
 	return AppConfig.GoogleLoginConfig
 }
 
-func InitializeAppConfig() {
+func LoadAppConfig() oauth2.Config {
 	err := LoadEnv()
 	if err != nil {
 		log.Fatal("failed to load .env file: ", err)
 	}
 
-	NewGoogleConfig()
+	return NewAppConfig()
 }
