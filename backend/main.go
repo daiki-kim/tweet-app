@@ -1,20 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"github.com/gin-gonic/gin"
 
-func add(a, b int) int {
-	return a + b
-}
+	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
+	"github.com/daiki-kim/tweet-app/backend/configs"
+)
 
 func main() {
-	// r := gin.Default()
-	// r.GET("/", func(c *gin.Context) {
-	// 	c.JSON(200, gin.H{
-	// 		"message": "Hello World!",
-	// 	})
-	// })
+	r := gin.Default()
 
-	// r.Run()
+	configs.LoadAppConfig()
 
-	fmt.Println(add(1, 2))
+	r.GET("/google_login", controllers.GoogleLogin)
+	r.GET("/google_callback", controllers.GoogleCallback)
+
+	r.Run()
 }
