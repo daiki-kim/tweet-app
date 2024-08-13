@@ -4,7 +4,7 @@ services:
     image: mysql:8.0
     container_name: mysql
     ports:
-      - ${DB_HOST}:${DB_PORT}
+      - ${DB_PORT}:${DB_PORT}
     environment:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
