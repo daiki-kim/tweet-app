@@ -99,7 +99,7 @@ func LoadConfig() error {
 	return nil
 }
 
-func init() {
+func InitializeConfig() {
 	if err := LoadConfig(); err != nil {
 		log.Fatal("failed to load config: ", err)
 	}

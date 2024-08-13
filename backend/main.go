@@ -8,6 +8,8 @@ import (
 )
 
 func main() {
+	configs.InitializeConfig()
+
 	r := gin.Default()
 
 	configs.LoadAppConfig()
