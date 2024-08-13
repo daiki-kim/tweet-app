@@ -30,4 +30,3 @@ tmp
 
 # Database
 tweet_app_database
-db_test.go
