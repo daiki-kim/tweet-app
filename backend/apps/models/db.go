@@ -3,7 +3,6 @@ package models
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/daiki-kim/tweet-app/backend/configs"
 	"gorm.io/driver/mysql"
@@ -12,7 +11,7 @@ import (
 )
 
 const (
-	InstanceSqLite int = iota
+	InstanceSQLite int = iota
 	InstanceMySQL
 )
 
@@ -39,11 +38,11 @@ func NewDatabaseFactory(instance int) (db *gorm.DB, err error) {
 			configs.Config.DBPort,
 			configs.Config.DBName,
 		)
-		log.Println(dsn)
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
-	case InstanceSqLite:
+	case InstanceSQLite:
 		db, err = gorm.Open(sqlite.Open(configs.Config.DBName), &gorm.Config{})
+
 	default:
 		return nil, errInvalidSQLDatabaseInstance
 	}
