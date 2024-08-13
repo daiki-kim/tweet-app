@@ -21,9 +21,9 @@ const (
 
 var (
 	tokenSignKey          = []byte(configs.GetEnvDefault("TOKEN_SIGN_KEY", "secret"))
-	tokenVeryfyKey        = []byte(configs.GetEnvDefault("TOKEN_VERIFY_KEY", "secret"))
+	tokenVerifyKey        = []byte(configs.GetEnvDefault("TOKEN_VERIFY_KEY", "secret"))
 	refreshTokenSignKey   = []byte(configs.GetEnvDefault("REFRESH_TOKEN_SIGN_KEY", "secret"))
-	refreshTokenVeryfyKey = []byte(configs.GetEnvDefault("REFRESH_TOKEN_VERIFY_KEY", "secret"))
+	refreshTokenVerifyKey = []byte(configs.GetEnvDefault("REFRESH_TOKEN_VERIFY_KEY", "secret"))
 )
 
 // custom claim struct with userId
@@ -98,6 +98,7 @@ func (c *CustomClaim) GenerateRefreshToken() (token string, err error) {
 }
 
 // update refresh token
+// TODO: if need to set expiration, use GenerateRefreshToken 2024-08-12
 func (c *CustomClaim) UpdateRefreshToken() (token string, err error) {
 	// generate jwt standard token
 	claims := jwt.RegisteredClaims{
@@ -112,7 +113,7 @@ func (c *CustomClaim) UpdateRefreshToken() (token string, err error) {
 	}
 	c.ID = uuid.New().String()
 	c.IssuedAt = jwt.NewNumericDate(time.Now().Local())
-	c.ExpiresAt = jwt.NewNumericDate(time.Now().Local().Add(RefreshTokenExpiration))
+	// c.ExpiresAt = jwt.NewNumericDate(time.Now().Local().Add(RefreshTokenExpiration))
 
 	// generate updated jwt token
 	updatedRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
