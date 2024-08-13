@@ -13,7 +13,7 @@ func TestGetModels(t *testing.T) {
 }
 
 func TestNewDatabaseFactoryWithSQLite(t *testing.T) {
-	db, err := NewDatabaseFactory(InstanceSqLite)
+	db, err := NewDatabaseFactory(InstanceSQLite)
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
 }
