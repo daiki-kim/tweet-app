@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/daiki-kim/tweet-app/backend/configs"
 	"gorm.io/driver/mysql"
@@ -38,6 +39,7 @@ func NewDatabaseFactory(instance int) (db *gorm.DB, err error) {
 			configs.Config.DBPort,
 			configs.Config.DBName,
 		)
+		log.Println(dsn)
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	case InstanceSqLite:
