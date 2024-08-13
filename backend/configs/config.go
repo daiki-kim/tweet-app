@@ -3,18 +3,27 @@ package configs
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
-type Config struct {
+type ConfigList struct {
+	Env                 string
+	DBHost              string
+	DBPort              int
+	DBUser              string
+	DBPassword          string
+	DBName              string
+	APICorsAllowOrigins []string
+
 	GoogleLoginConfig oauth2.Config
 }
 
 var (
-	AppConfig            Config
+	Config               ConfigList
 	GOOGLE_EMAIL_SCOPE   = "https://www.googleapis.com/auth/userinfo.email"
 	GOOGLE_PROFILE_SCOPE = "https://www.googleapis.com/auth/userinfo.profile"
 )
@@ -30,15 +39,21 @@ func GetEnvDefault(key, defVal string) string {
 
 func LoadEnv() error {
 	err := godotenv.Load(".env")
-	if err != nil {
-		return err
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	// テスト実行の時はテストがあるディレクトリの.envを読み込む
+	err = godotenv.Load(".env.test")
+	if err == nil {
+		return nil
+	}
+
+	return err
 }
 
 func NewAppConfig() oauth2.Config {
-	AppConfig.GoogleLoginConfig = oauth2.Config{
+	Config.GoogleLoginConfig = oauth2.Config{
 		RedirectURL:  GetEnvDefault("GOOGLE_REDIRECT_URL", "http://localhost:8080/google_callback"),
 		ClientID:     GetEnvDefault("GOOGLE_CLIENT_ID", ""),
 		ClientSecret: GetEnvDefault("GOOGLE_CLIENT_SECRET", ""),
@@ -46,7 +61,7 @@ func NewAppConfig() oauth2.Config {
 		Endpoint:     google.Endpoint,
 	}
 
-	return AppConfig.GoogleLoginConfig
+	return Config.GoogleLoginConfig
 }
 
 func LoadAppConfig() oauth2.Config {
@@ -56,4 +71,36 @@ func LoadAppConfig() oauth2.Config {
 	}
 
 	return NewAppConfig()
+}
+
+func LoadConfig() error {
+	err := LoadEnv()
+	if err != nil {
+		return err
+	}
+
+	DBPort, err := strconv.Atoi(GetEnvDefault("DB_PORT", "3306"))
+	if err != nil {
+		return err
+	}
+
+	Config = ConfigList{
+		Env:                 GetEnvDefault("ENV", "development"),
+		DBHost:              GetEnvDefault("DB_HOST", "0.0.0.0"),
+		DBPort:              DBPort,
+		DBUser:              GetEnvDefault("DB_USER", "app"),
+		DBPassword:          GetEnvDefault("DB_PASSWORD", "password"),
+		DBName:              GetEnvDefault("DB_NAME", "tweet_app"),
+		APICorsAllowOrigins: []string{"http://0.0.0.0:8001"},
+
+		GoogleLoginConfig: LoadAppConfig(),
+	}
+
+	return nil
+}
+
+func init() {
+	if err := LoadConfig(); err != nil {
+		log.Fatal("failed to load config: ", err)
+	}
 }
