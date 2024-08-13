@@ -23,7 +23,7 @@ func GoogleLogin(ctx *gin.Context) {
 	ctx.SetCookie("oath_state", state, 3600, "/", "", false, true)
 
 	// set redirect url with state
-	url := configs.AppConfig.GoogleLoginConfig.AuthCodeURL(state)
+	url := configs.Config.GoogleLoginConfig.AuthCodeURL(state)
 	ctx.Redirect(http.StatusFound, url)
 }
 

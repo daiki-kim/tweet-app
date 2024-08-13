@@ -27,3 +27,6 @@ go.work.sum
 # air file
 .air.toml
 tmp
+
+# Database
+tweet_app_database
