@@ -30,3 +30,4 @@ tmp
 
 # Database
 tweet_app_database
+.DS_Store
