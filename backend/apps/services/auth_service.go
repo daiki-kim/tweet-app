@@ -1,6 +1,7 @@
 package services
 
 import (
+	"log"
 	"time"
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
@@ -30,6 +31,7 @@ func Str2time(t string) (time.Time, error) {
 func PrepareBaseUserModel(name, email, dobString string) (*models.User, error) {
 	dob, err := Str2time(dobString)
 	if err != nil {
+		log.Println("failed to convert string to time: ", err)
 		return nil, err
 	}
 
@@ -46,6 +48,7 @@ func PrepareBaseUserModel(name, email, dobString string) (*models.User, error) {
 func (s *AuthService) SignupUsingOAuth(name, email, dobString string) error {
 	user, err := PrepareBaseUserModel(name, email, dobString)
 	if err != nil {
+		log.Println("failed to prepare user model: ", err)
 		return err
 	}
 
@@ -58,11 +61,13 @@ func (s *AuthService) Signup(name, email, password, dobString string) error {
 	// パスワードをハッシュ化
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Println("failed to hash password: ", err)
 		return err
 	}
 
 	user, err := PrepareBaseUserModel(name, email, dobString)
 	if err != nil {
+		log.Println("failed to prepare user model: ", err)
 		return err
 	}
 
