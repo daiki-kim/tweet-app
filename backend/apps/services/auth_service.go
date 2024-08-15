@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -14,6 +15,7 @@ type IAuthService interface {
 	SignupUsingOAuth(name, email, dobString string) error
 	Signup(name, email, dobString, password string) error
 	LoginUsingOAuth(email string) (*LoginResponse, error)
+	Login(email, password string) (*LoginResponse, error)
 }
 
 type AuthService struct {
@@ -85,18 +87,55 @@ func (s *AuthService) Signup(name, email, dobString, password string) error {
 // OAuthからのログイン
 // googleから取得したemailを使用してtokenを発行
 func (s *AuthService) LoginUsingOAuth(email string) (*LoginResponse, error) {
+	// emailからユーザーモデルを取得
 	user, err := s.repository.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
 
-	// Claim構造体のポインタを生成
+	// Claim構造体のポインタを生成して、トークンを発行
 	claim := auth.NewClaim(user.Email)
 	token, err := claim.GenerateToken()
 	if err != nil {
 		return nil, err
 	}
 
+	// Claim構造体のポインタを生成して、リフレッシュトークンを発行
+	refreshTokenClaim := auth.NewClaim(user.Email)
+	refreshToken, err := refreshTokenClaim.GenerateRefreshToken()
+	if err != nil {
+		return nil, err
+	}
+
+	loginResponse := &LoginResponse{
+		Token:        token,
+		RefreshToken: refreshToken,
+	}
+	return loginResponse, nil
+}
+
+// Normalログイン
+// ユーザーが入力したemailとpasswordを使用してtokenを発行
+func (s *AuthService) Login(email, password string) (*LoginResponse, error) {
+	// emailからユーザーモデルを取得
+	user, err := s.repository.FindUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// ハッシュ化されたパスワードと入力されたパスワードを比較
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, errors.New("invalid password")
+	}
+
+	// Claim構造体のポインタを生成してトークンを発行
+	claim := auth.NewClaim(user.Email)
+	token, err := claim.GenerateToken()
+	if err != nil {
+		return nil, err
+	}
+
+	// Claim構造体のポインタを生成してリフレッシュトークンを発行
 	refreshTokenClaim := auth.NewClaim(user.Email)
 	refreshToken, err := refreshTokenClaim.GenerateRefreshToken()
 	if err != nil {
