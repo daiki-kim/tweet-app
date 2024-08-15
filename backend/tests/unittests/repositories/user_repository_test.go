@@ -39,7 +39,7 @@ func (suite *UserTestSuite) TestUserRepository() {
 		Name:     "testuser",
 		Email:    "test@example.com",
 		Password: "testpassword",
-		Dob:      testDob,
+		// Dob:      testDob,
 	}
 
 	testUserRepository := repositories.NewUserRepository(models.DB)

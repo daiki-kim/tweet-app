@@ -8,7 +8,7 @@ import (
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/apps/services"
-	"github.com/daiki-kim/tweet-app/backend/tests/mocks"
+	"github.com/daiki-kim/tweet-app/backend/tests/unittests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
