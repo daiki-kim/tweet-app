@@ -121,3 +121,48 @@ func TestSignupSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestLoginUsingOAuthSuccess(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo := &mocks.MockUserRepository{}
+	testAuthService := services.NewAuthService(mockRepo)
+
+	// ユーザーモデルを準備
+	testUser := &models.User{
+		Name:  "testuser",
+		Email: "test@example.com",
+		Dob:   time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+
+	// FindUserByEmailで使用するmockメソッドを準備
+	mockRepo.On("FindUserByEmail", testUser.Email).Return(testUser, nil)
+
+	// ログイン
+	loginResponse, err := testAuthService.LoginUsingOAuth(testUser.Email)
+	log.Println(loginResponse)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, loginResponse)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLoginUsingOAuthUserNotFound(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo := &mocks.MockUserRepository{}
+	testAuthService := services.NewAuthService(mockRepo)
+
+	// 存在しないemailを使用するユーザーモデルを準備
+	notExistUser := &models.User{
+		Email: "test@example.com",
+	}
+
+	// FindUserByEmailで使用するmockメソッドを準備
+	mockRepo.On("FindUserByEmail", notExistUser.Email).Return(nil, errors.New("user not found"))
+
+	// ログイン
+	loginResponse, err := testAuthService.LoginUsingOAuth(notExistUser.Email)
+
+	assert.Equal(t, "user not found", err.Error())
+	assert.Nil(t, loginResponse)
+	mockRepo.AssertExpectations(t)
+}
