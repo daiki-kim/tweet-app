@@ -128,18 +128,21 @@ func TestLoginUsingOAuthSuccess(t *testing.T) {
 	testAuthService := services.NewAuthService(mockRepo)
 
 	// ユーザーモデルを準備
-	testUser := &models.User{
-		Name:  "testuser",
-		Email: "test@example.com",
-		Dob:   time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+	name := "testuser"
+	email := "test@example.com"
+	dob := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	expectedUser := &models.User{
+		Name:  name,
+		Email: email,
+		Dob:   dob,
 	}
 
 	// FindUserByEmailで使用するmockメソッドを準備
-	mockRepo.On("FindUserByEmail", testUser.Email).Return(testUser, nil)
+	mockRepo.On("FindUserByEmail", email).Return(expectedUser, nil)
 
 	// ログイン
-	loginResponse, err := testAuthService.LoginUsingOAuth(testUser.Email)
-	log.Println(loginResponse)
+	loginResponse, err := testAuthService.LoginUsingOAuth(expectedUser.Email)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, loginResponse)
@@ -151,18 +154,103 @@ func TestLoginUsingOAuthUserNotFound(t *testing.T) {
 	mockRepo := &mocks.MockUserRepository{}
 	testAuthService := services.NewAuthService(mockRepo)
 
-	// 存在しないemailを使用するユーザーモデルを準備
-	notExistUser := &models.User{
-		Email: "test@example.com",
+	// ユーザーが存在しないemailを準備
+	notExistEmail := "test@example.com"
+
+	// FindUserByEmailで使用するmockメソッドを準備
+	mockRepo.On("FindUserByEmail", notExistEmail).Return(nil, errors.New("user not found"))
+
+	// ログイン
+	loginResponse, err := testAuthService.LoginUsingOAuth(notExistEmail)
+
+	assert.Equal(t, "user not found", err.Error())
+	assert.Nil(t, loginResponse)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLoginSuccess(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo := &mocks.MockUserRepository{}
+	testAuthService := services.NewAuthService(mockRepo)
+
+	// ユーザーモデルを準備
+	name := "testuser"
+	email := "test@example.com"
+	password := "testpassword"
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPasswordString := string(hashedPassword)
+	dob := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	expectedUser := &models.User{
+		Name:     name,
+		Email:    email,
+		Password: hashedPasswordString,
+		Dob:      dob,
 	}
 
 	// FindUserByEmailで使用するmockメソッドを準備
-	mockRepo.On("FindUserByEmail", notExistUser.Email).Return(nil, errors.New("user not found"))
+	mockRepo.On("FindUserByEmail", mock.MatchedBy(func(email string) bool {
+		return email == expectedUser.Email
+	})).Return(expectedUser, nil)
 
 	// ログイン
-	loginResponse, err := testAuthService.LoginUsingOAuth(notExistUser.Email)
+	loginResponse, err := testAuthService.Login(email, password)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, loginResponse)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLoginNotUserFound(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo := &mocks.MockUserRepository{}
+	testAuthService := services.NewAuthService(mockRepo)
+
+	// ユーザーが存在しないemailとpasswordを準備
+	notExistEmail := "test@example.com"
+	notExistPassword := "testpassword"
+
+	// FindUserByEmailで使用するmockメソッドを準備
+	mockRepo.On("FindUserByEmail", notExistEmail).Return(nil, errors.New("user not found"))
+
+	// ログイン
+	loginResponse, err := testAuthService.Login(notExistEmail, notExistPassword)
 
 	assert.Equal(t, "user not found", err.Error())
+	assert.Nil(t, loginResponse)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLoginInvalidPassword(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo := &mocks.MockUserRepository{}
+	testAuthService := services.NewAuthService(mockRepo)
+
+	// ユーザーモデルを準備
+	name := "testuser"
+	email := "test@example.com"
+	wrongPassword := "wrongpassword"
+	correctPassword := "correctpassword"
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(correctPassword), bcrypt.DefaultCost)
+	hashedPasswordString := string(hashedPassword)
+	dob := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	expectedUser := &models.User{
+		Name:     name,
+		Email:    email,
+		Password: hashedPasswordString,
+		Dob:      dob,
+	}
+
+	// FindUserByEmailで使用するmockメソッドを準備
+	mockRepo.On("FindUserByEmail", mock.MatchedBy(func(email string) bool {
+		return email == expectedUser.Email
+	})).Return(expectedUser, nil)
+
+	// 不正なパスワードでログイン
+	loginResponse, err := testAuthService.Login(email, wrongPassword)
+
+	assert.Equal(t, "invalid password", err.Error())
 	assert.Nil(t, loginResponse)
 	mockRepo.AssertExpectations(t)
 }

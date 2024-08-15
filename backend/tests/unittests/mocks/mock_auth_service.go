@@ -26,3 +26,11 @@ func (m *MockAuthService) LoginUsingOAuth(email string) (*services.LoginResponse
 	}
 	return args.Get(0).(*services.LoginResponse), args.Error(1)
 }
+
+func (m *MockAuthService) Login(email, password string) (*services.LoginResponse, error) {
+	args := m.Called(email, password)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*services.LoginResponse), args.Error(1)
+}
