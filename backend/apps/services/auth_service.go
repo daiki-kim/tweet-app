@@ -6,12 +6,14 @@ import (
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/apps/repositories"
+	"github.com/daiki-kim/tweet-app/backend/pkg/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type IAuthService interface {
 	SignupUsingOAuth(name, email, dobString string) error
 	Signup(name, email, dobString, password string) error
+	LoginUsingOAuth(email string) (*LoginResponse, error)
 }
 
 type AuthService struct {
@@ -20,6 +22,11 @@ type AuthService struct {
 
 func NewAuthService(repository repositories.IUserRepository) IAuthService {
 	return &AuthService{repository: repository}
+}
+
+type LoginResponse struct {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // string型をTime型に変換
@@ -73,4 +80,32 @@ func (s *AuthService) Signup(name, email, dobString, password string) error {
 
 	user.Password = string(hashedPassword)
 	return s.repository.CreateUser(user)
+}
+
+// OAuthからのログイン
+// googleから取得したemailを使用してtokenを発行
+func (s *AuthService) LoginUsingOAuth(email string) (*LoginResponse, error) {
+	user, err := s.repository.FindUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Claim構造体のポインタを生成
+	claim := auth.NewClaim(user.Email)
+	token, err := claim.GenerateToken()
+	if err != nil {
+		return nil, err
+	}
+
+	refreshTokenClaim := auth.NewClaim(user.Email)
+	refreshToken, err := refreshTokenClaim.GenerateRefreshToken()
+	if err != nil {
+		return nil, err
+	}
+
+	loginResponse := &LoginResponse{
+		Token:        token,
+		RefreshToken: refreshToken,
+	}
+	return loginResponse, nil
 }
