@@ -111,12 +111,12 @@ func TestSignupSuccess(t *testing.T) {
 	mockRepo.On("CreateUser", mock.MatchedBy(func(user *models.User) bool {
 		return user.Name == expectedUser.Name &&
 			user.Email == expectedUser.Email &&
-			bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil &&
-			user.Dob == expectedUser.Dob
+			user.Dob == expectedUser.Dob &&
+			bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil
 	})).Return(nil)
 
 	// サインアップ
-	err := testAuthService.Signup(name, email, password, dobString)
+	err := testAuthService.Signup(name, email, dobString, password)
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
