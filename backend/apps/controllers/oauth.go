@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
 	"github.com/daiki-kim/tweet-app/backend/configs"
@@ -12,22 +13,30 @@ import (
 )
 
 func GoogleLogin(ctx *gin.Context) {
+	configs.LoadAppConfig()
+	conf := configs.Config
+
 	state, err := utils.GenerateRandomString(32)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})
 		return
 	}
 	log.Printf("generate state: %s", state)
+	log.Printf("ClientID: %s", conf.GoogleLoginConfig.ClientID)
+	log.Printf("RedirectURL: %s", conf.GoogleLoginConfig.RedirectURL)
 
-	// TODO: set state to cookie or session 2024-08-11
 	ctx.SetCookie("oath_state", state, 3600, "/", "", false, true)
 
 	// set redirect url with state
-	url := configs.Config.GoogleLoginConfig.AuthCodeURL(state)
+	url := conf.GoogleLoginConfig.AuthCodeURL(state)
+	log.Println(url)
 	ctx.Redirect(http.StatusFound, url)
 }
 
 func GoogleCallback(ctx *gin.Context) {
+	configs.LoadAppConfig()
+	conf := configs.Config
+
 	// get state from cookie
 	cookieState, err := ctx.Cookie("oath_state")
 	if err != nil {
@@ -56,7 +65,8 @@ func GoogleCallback(ctx *gin.Context) {
 	}
 
 	// get user info from google api using token
-	res, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	log.Println(conf.GoogleApiURL)
+	res, err := http.Get(conf.GoogleApiURL + token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user info"})
 	}
@@ -73,5 +83,16 @@ func GoogleCallback(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user info"})
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": string(userData)})
+	// ユーザー情報をセッションに保存
+	session := sessions.Default(ctx)
+	session.Set("user_data", string(userData)) // userDataはsessionにinterface型として保存されるが、Getするした後string型で使用するのでstring型に変換している
+	err = session.Save()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save user data in session"})
+		return
+	}
+	log.Println("session:", session.Get("user_data"))
+
+	// サインアップページにリダイレクト
+	ctx.Redirect(http.StatusFound, conf.SignupRedirectURL)
 }

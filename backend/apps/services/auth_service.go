@@ -11,7 +11,7 @@ import (
 
 type IAuthService interface {
 	SignupUsingOAuth(name, email, dobString string) error
-	Signup(name, email, password, dobString string) error
+	Signup(name, email, dobString, password string) error
 }
 
 type AuthService struct {
@@ -57,7 +57,7 @@ func (s *AuthService) SignupUsingOAuth(name, email, dobString string) error {
 
 // ユーザー入力情報を使用するNormalのサインアップ
 // パスワードが必要
-func (s *AuthService) Signup(name, email, password, dobString string) error {
+func (s *AuthService) Signup(name, email, dobString, password string) error {
 	// パスワードをハッシュ化
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
