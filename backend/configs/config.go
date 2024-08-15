@@ -12,6 +12,7 @@ import (
 
 type ConfigList struct {
 	Env                 string
+	DBInstance          int
 	DBHost              string
 	DBPort              int
 	DBUser              string
@@ -20,6 +21,8 @@ type ConfigList struct {
 	APICorsAllowOrigins []string
 
 	GoogleLoginConfig oauth2.Config
+	GoogleApiURL      string
+	SignupRedirectURL string
 }
 
 var (
@@ -79,6 +82,11 @@ func LoadConfig() error {
 		return err
 	}
 
+	DBInstance, err := strconv.Atoi(GetEnvDefault("DB_INSTANCE", "1"))
+	if err != nil {
+		return err
+	}
+
 	DBPort, err := strconv.Atoi(GetEnvDefault("DB_PORT", "3306"))
 	if err != nil {
 		return err
@@ -86,6 +94,7 @@ func LoadConfig() error {
 
 	Config = ConfigList{
 		Env:                 GetEnvDefault("ENV", "development"),
+		DBInstance:          DBInstance,
 		DBHost:              GetEnvDefault("DB_HOST", "0.0.0.0"),
 		DBPort:              DBPort,
 		DBUser:              GetEnvDefault("DB_USER", "app"),
@@ -94,6 +103,8 @@ func LoadConfig() error {
 		APICorsAllowOrigins: []string{"http://0.0.0.0:8001"},
 
 		GoogleLoginConfig: LoadAppConfig(),
+		GoogleApiURL:      GetEnvDefault("GOOGLE_API_URL", "https://www.googleapis.com/oauth2/v3/userinfo"),
+		SignupRedirectURL: GetEnvDefault("SIGNUP_REDIRECT_URL", "http://localhost:8080/api/v1/signup/oauth"),
 	}
 
 	return nil

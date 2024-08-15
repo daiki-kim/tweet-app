@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/daiki-kim/tweet-app/backend/configs"
 	"gorm.io/driver/mysql"
@@ -32,12 +33,21 @@ func NewDatabaseFactory(instance int) (db *gorm.DB, err error) {
 	case InstanceMySQL:
 		dsn := fmt.Sprintf(
 			"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
-			configs.Config.DBUser,
-			configs.Config.DBPassword,
-			configs.Config.DBHost,
-			configs.Config.DBPort,
-			configs.Config.DBName,
+			"tweet_app",
+			"tweet_password",
+			"localhost", // もしくは 'localhost'
+			3306,
+			"tweet_app_database",
 		)
+		// dsn := fmt.Sprintf(
+		// 	"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
+		// 	configs.Config.DBUser,
+		// 	configs.Config.DBPassword,
+		// 	configs.Config.DBHost,
+		// 	configs.Config.DBPort,
+		// 	configs.Config.DBName,
+		// )
+		log.Println(dsn)
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	case InstanceSQLite:

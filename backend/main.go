@@ -1,21 +1,21 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"log"
 
-	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
+	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/configs"
 )
 
 func main() {
 	configs.InitializeConfig()
+	err := models.SetDatabase(configs.Config.DBInstance)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-	r := gin.Default()
-
-	configs.LoadAppConfig()
-
-	r.GET("/google_login", controllers.GoogleLogin)
-	r.GET("/google_callback", controllers.GoogleCallback)
+	db := models.DB
+	r := setupRouter(db)
 
 	r.Run()
 }
