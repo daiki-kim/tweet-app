@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -12,7 +14,7 @@ import (
 	utils "github.com/daiki-kim/tweet-app/backend/pkg"
 )
 
-func GoogleLogin(ctx *gin.Context) {
+func GoogleLogin(ctx *gin.Context, action string) {
 	configs.LoadAppConfig()
 	conf := configs.Config
 
@@ -21,20 +23,29 @@ func GoogleLogin(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})
 		return
 	}
-	log.Printf("generate state: %s", state)
-	log.Printf("ClientID: %s", conf.GoogleLoginConfig.ClientID)
-	log.Printf("RedirectURL: %s", conf.GoogleLoginConfig.RedirectURL)
 
-	ctx.SetCookie("oath_state", state, 3600, "/", "", false, true)
+	// add action to state
+	stateData := map[string]string{
+		"state":  state,
+		"action": action,
+	}
+	stateJSON, err := json.Marshal(stateData)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to marshal state"})
+		return
+	}
+	encodedState := base64.URLEncoding.EncodeToString(stateJSON)
+
+	ctx.SetCookie("oath_state", encodedState, 3600, "/", "", false, true)
 
 	// set redirect url with state
-	url := conf.GoogleLoginConfig.AuthCodeURL(state)
+	url := conf.GoogleLoginConfig.AuthCodeURL(encodedState)
 	log.Println(url)
 	ctx.Redirect(http.StatusFound, url)
 }
 
 func GoogleCallback(ctx *gin.Context) {
-	configs.LoadAppConfig()
+	googleConfig := configs.LoadAppConfig()
 	conf := configs.Config
 
 	// get state from cookie
@@ -44,18 +55,38 @@ func GoogleCallback(ctx *gin.Context) {
 		return
 	}
 
-	// check state is matched with state from cookie
-	state := ctx.Query("state")
-	log.Printf("get state: %s", state)
+	// check state is matched with state from cookie (against csrf attack)
+	stateQuery := ctx.Query("state")
+	log.Printf("get state: %s", stateQuery)
 
-	if state != cookieState {
+	if stateQuery != cookieState {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "state does not match"})
+		return
+	}
+
+	// decode state
+	stateJSON, err := base64.URLEncoding.DecodeString(stateQuery)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to decode state"})
+		return
+	}
+
+	var stateData map[string]string
+	if err := json.Unmarshal(stateJSON, &stateData); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unmarshal state"})
+		return
+	}
+
+	// check action
+	action := stateData["action"]
+	if action != "signup" && action != "login" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid action"})
 		return
 	}
 
 	// get code
 	code := ctx.Query("code")
-	googleConfig := configs.LoadAppConfig()
+	// googleConfig := configs.LoadAppConfig()
 
 	// convert code to token
 	token, err := googleConfig.Exchange(ctx, code)
@@ -65,7 +96,6 @@ func GoogleCallback(ctx *gin.Context) {
 	}
 
 	// get user info from google api using token
-	log.Println(conf.GoogleApiURL)
 	res, err := http.Get(conf.GoogleApiURL + token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user info"})
@@ -93,6 +123,13 @@ func GoogleCallback(ctx *gin.Context) {
 	}
 	log.Println("session:", session.Get("user_data"))
 
-	// サインアップページにリダイレクト
-	ctx.Redirect(http.StatusFound, conf.SignupRedirectURL)
+	// stateDataのactionでリダイレクト先を分岐
+	switch action {
+	case "signup":
+		ctx.Redirect(http.StatusFound, conf.SignupRedirectURL)
+	case "login":
+		ctx.Redirect(http.StatusFound, conf.LoginRedirectURL)
+	default:
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid action"})
+	}
 }
