@@ -23,6 +23,7 @@ type ConfigList struct {
 	GoogleLoginConfig oauth2.Config
 	GoogleApiURL      string
 	SignupRedirectURL string
+	LoginRedirectURL  string
 }
 
 var (
@@ -105,6 +106,7 @@ func LoadConfig() error {
 		GoogleLoginConfig: LoadAppConfig(),
 		GoogleApiURL:      GetEnvDefault("GOOGLE_API_URL", "https://www.googleapis.com/oauth2/v3/userinfo"),
 		SignupRedirectURL: GetEnvDefault("SIGNUP_REDIRECT_URL", "http://localhost:8080/api/v1/signup/oauth"),
+		LoginRedirectURL:  GetEnvDefault("LOGIN_REDIRECT_URL", "http://localhost:8080/api/v1/login/oauth"),
 	}
 
 	return nil
