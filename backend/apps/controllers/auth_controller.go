@@ -31,14 +31,14 @@ func (c *AuthController) SignupUsingOAuth(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	userData := session.Get("user_data")
 	if userData == nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to get user data from session"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to get user data from session: session in nil"})
 		return
 	}
 
 	// userdataをinputにバインド
 	var input dtos.OAuthSignupInput
 	if err := json.Unmarshal([]byte(userData.(string)), &input); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unmarshal user data"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unmarshal user data from session"})
 		return
 	}
 	// 入力されたdobをctxからinputにバインド
@@ -54,7 +54,10 @@ func (c *AuthController) SignupUsingOAuth(ctx *gin.Context) {
 
 	// サインアップが成功したらセッションをクリア
 	session.Delete("user_data")
-	session.Save()
+	if err := session.Save(); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to clear session after signup"})
+		return
+	}
 
 	ctx.Status(http.StatusCreated)
 }
@@ -83,7 +86,7 @@ func (c *AuthController) LoginUsingOAuth(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	userData := session.Get("user_data")
 	if userData == nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to get user data from session"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to get user data from session: session in nil"})
 		return
 	}
 
@@ -107,7 +110,10 @@ func (c *AuthController) LoginUsingOAuth(ctx *gin.Context) {
 
 	// セッションをクリア
 	session.Delete("user_data")
-	session.Save()
+	if err := session.Save(); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to clear session after login"})
+		return
+	}
 
 	ctx.JSON(http.StatusOK, loginResponse)
 }
@@ -124,15 +130,14 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	// ユーザーデータからログイン
 	loginResponse, err := c.service.Login(input.Email, input.Password)
 	if err != nil {
-		if err.Error() == "user not found" {
+		switch err.Error() {
+		case "user not found":
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-			return
-		}
-		if err.Error() == "invalid password" {
+		case "invalid password":
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
-			return
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to login"})
 		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to login"})
 		return
 	}
 
