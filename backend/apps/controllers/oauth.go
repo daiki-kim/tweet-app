@@ -15,7 +15,6 @@ import (
 )
 
 func GoogleLogin(ctx *gin.Context, action string) {
-	configs.LoadAppConfig()
 	conf := configs.Config
 
 	state, err := utils.GenerateRandomString(32)
@@ -29,13 +28,16 @@ func GoogleLogin(ctx *gin.Context, action string) {
 		"state":  state,
 		"action": action,
 	}
+	// marshal state to JSON
 	stateJSON, err := json.Marshal(stateData)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to marshal state"})
 		return
 	}
+	// encode state
 	encodedState := base64.URLEncoding.EncodeToString(stateJSON)
 
+	// set cookie with encoded state
 	ctx.SetCookie("oath_state", encodedState, 3600, "/", "", false, true)
 
 	// set redirect url with state
@@ -45,7 +47,6 @@ func GoogleLogin(ctx *gin.Context, action string) {
 }
 
 func GoogleCallback(ctx *gin.Context) {
-	googleConfig := configs.LoadAppConfig()
 	conf := configs.Config
 
 	// get state from cookie
@@ -55,10 +56,14 @@ func GoogleCallback(ctx *gin.Context) {
 		return
 	}
 
-	// check state is matched with state from cookie (against csrf attack)
+	// get state from query
 	stateQuery := ctx.Query("state")
-	log.Printf("get state: %s", stateQuery)
+	if stateQuery == "" {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get state from query"})
+		return
+	}
 
+	// check state is matched with state from cookie (against csrf attack)
 	if stateQuery != cookieState {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "state does not match"})
 		return
@@ -86,10 +91,9 @@ func GoogleCallback(ctx *gin.Context) {
 
 	// get code
 	code := ctx.Query("code")
-	// googleConfig := configs.LoadAppConfig()
 
 	// convert code to token
-	token, err := googleConfig.Exchange(ctx, code)
+	token, err := conf.GoogleLoginConfig.Exchange(ctx, code)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert code to token"})
 		return
@@ -116,12 +120,10 @@ func GoogleCallback(ctx *gin.Context) {
 	// ユーザー情報をセッションに保存
 	session := sessions.Default(ctx)
 	session.Set("user_data", string(userData)) // userDataはsessionにinterface型として保存されるが、Getするした後string型で使用するのでstring型に変換している
-	err = session.Save()
-	if err != nil {
+	if err := session.Save(); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save user data in session"})
 		return
 	}
-	log.Println("session:", session.Get("user_data"))
 
 	// stateDataのactionでリダイレクト先を分岐
 	switch action {

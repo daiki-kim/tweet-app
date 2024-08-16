@@ -5,6 +5,7 @@ import (
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/configs"
+	"github.com/daiki-kim/tweet-app/backend/routes"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 	}
 
 	db := models.DB
-	r := setupRouter(db)
+	r := routes.SetupRouter(db)
 
 	r.Run()
 }

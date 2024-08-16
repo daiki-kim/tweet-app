@@ -21,7 +21,7 @@ const (
 
 var (
 	tokenSignKey          = []byte(configs.GetEnvDefault("TOKEN_SIGN_KEY", "secret"))
-	tokenVerifyKey        = []byte(configs.GetEnvDefault("TOKEN_VERIFY_KEY", "secret"))
+	TokenVerifyKey        = []byte(configs.GetEnvDefault("TOKEN_VERIFY_KEY", "secret"))
 	refreshTokenSignKey   = []byte(configs.GetEnvDefault("REFRESH_TOKEN_SIGN_KEY", "secret"))
 	refreshTokenVerifyKey = []byte(configs.GetEnvDefault("REFRESH_TOKEN_VERIFY_KEY", "secret"))
 )

@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupRouter(db *gorm.DB) *gin.Engine {
+func SetupRouter(db *gorm.DB) *gin.Engine {
 	userRepository := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepository)
 	authController := controllers.NewAuthController(authService)
