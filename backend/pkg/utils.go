@@ -21,6 +21,6 @@ func Uint2String(i uint) string {
 }
 
 func String2Uint(s string) uint {
-	i, _ := strconv.ParseUint(s, 10, 32)
+	i, _ := strconv.ParseUint(s, 10, 64)
 	return uint(i)
 }
