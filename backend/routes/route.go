@@ -51,6 +51,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 				tweetRouterWithAuth.GET("/:id", tweetController.GetTweet)
 				tweetRouterWithAuth.GET("/user/:user_id", tweetController.GetUserTweets)
 				tweetRouterWithAuth.PUT("/:id", tweetController.UpdateTweet)
+				tweetRouterWithAuth.DELETE("/:id", tweetController.DeleteTweet)
 			}
 
 		}

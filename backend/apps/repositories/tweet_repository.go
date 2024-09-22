@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"errors"
-	"log"
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"gorm.io/gorm"
@@ -13,6 +12,7 @@ type ITweetRepository interface {
 	GetTweet(id uint) (*models.Tweet, error)
 	GetUserTweets(userId uint) ([]*models.Tweet, error)
 	UpdateTweet(updateTweet *models.Tweet) (*models.Tweet, error)
+	DeleteTweet(id uint) error
 }
 
 type TweetRepository struct {
@@ -26,11 +26,9 @@ func NewTweetRepository(db *gorm.DB) ITweetRepository {
 func (r *TweetRepository) CreateTweet(tweet *models.Tweet) (*models.Tweet, error) {
 	result := r.DB.Create(tweet)
 	if result.Error != nil {
-		log.Println("failed to create tweet: ", result.Error)
 		return nil, result.Error
 	}
 
-	log.Println("created tweet: ", tweet)
 	return tweet, nil
 }
 
@@ -39,7 +37,6 @@ func (r *TweetRepository) GetTweet(id uint) (*models.Tweet, error) {
 
 	result := r.DB.First(&tweet, "id = ?", id)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		log.Println("tweet not found: ", result.Error)
 		return nil, errors.New("tweet not found")
 	} else if result.Error != nil {
 		return nil, result.Error
@@ -68,4 +65,15 @@ func (r *TweetRepository) UpdateTweet(updateTweet *models.Tweet) (*models.Tweet,
 	}
 
 	return updateTweet, nil
+}
+
+func (r *TweetRepository) DeleteTweet(id uint) error {
+	result := r.DB.Delete(&models.Tweet{}, "id = ?", id)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return errors.New("tweet not found")
+	} else if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }

@@ -13,6 +13,7 @@ type ITweetService interface {
 	GetTweet(id uint) (*models.Tweet, error)
 	GetUserTweets(userId uint) ([]*models.Tweet, error)
 	UpdateTweet(id, userId uint, inputTweet *dtos.UpdateTweetInput) (*models.Tweet, error)
+	DeleteTweet(id, userId uint) error
 }
 
 type TweetService struct {
@@ -75,4 +76,17 @@ func (s *TweetService) UpdateTweet(id, userId uint, inputTweet *dtos.UpdateTweet
 	}
 
 	return s.repository.UpdateTweet(updatedTweet)
+}
+
+func (s *TweetService) DeleteTweet(id, userId uint) error {
+	targetTweet, err := s.repository.GetTweet(id)
+	if err != nil {
+		return err
+	}
+
+	if targetTweet.UserID != userId {
+		return errors.New("this tweet is not yours")
+	}
+
+	return s.repository.DeleteTweet(id)
 }

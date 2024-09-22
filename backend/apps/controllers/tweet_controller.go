@@ -15,6 +15,7 @@ type ITweetController interface {
 	GetTweet(ctx *gin.Context)
 	GetUserTweets(ctx *gin.Context)
 	UpdateTweet(ctx *gin.Context)
+	DeleteTweet(ctx *gin.Context)
 }
 
 type TweetController struct {
@@ -55,8 +56,13 @@ func (c *TweetController) GetTweet(ctx *gin.Context) {
 
 	tweet, err := c.service.GetTweet(tweetId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tweet"})
-		return
+		if err.Error() == "tweet not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "tweet not found"})
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tweet"})
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, tweet)
@@ -72,7 +78,7 @@ func (c *TweetController) GetUserTweets(ctx *gin.Context) {
 	tweets, err := c.service.GetUserTweets(userId)
 	if err != nil {
 		if err.Error() == "user not found" {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user tweets"})
@@ -105,7 +111,7 @@ func (c *TweetController) UpdateTweet(ctx *gin.Context) {
 	tweet, err := c.service.UpdateTweet(tweetId, userId, &updateInput)
 	if err != nil {
 		if err.Error() == "this tweet is not yours" {
-			ctx.JSON(http.StatusForbidden, gin.H{"error": "this tweet is not yours"})
+			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update tweet"})
@@ -114,6 +120,34 @@ func (c *TweetController) UpdateTweet(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, tweet)
+}
+
+func (c *TweetController) DeleteTweet(ctx *gin.Context) {
+	userId := getUserIdFromCtx(ctx)
+	if userId == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user id"})
+		return
+	}
+
+	tweetId := getIdFromReq(ctx, "id")
+	if tweetId == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tweet id"})
+		return
+	}
+
+	if err := c.service.DeleteTweet(tweetId, userId); err != nil {
+		if err.Error() == "tweet not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		} else if err.Error() == "this tweet is not yours" {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete tweet"})
+		}
+	}
+
+	ctx.Status(http.StatusOK)
 }
 
 // contextからstringのuser_idを取得してuintで返す
