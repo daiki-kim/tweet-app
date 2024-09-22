@@ -14,13 +14,20 @@ type DBSQLiteSuite struct {
 	suite.Suite
 }
 
+// tweetモデルはenum型がSQLiteで対応していないため省略
+func getTestModels() []interface{} {
+	return []interface{}{
+		&models.User{},
+	}
+}
+
 // sqliteのテストスイートをセットアップ
 func (suite *DBSQLiteSuite) SetupSuite() {
 	configs.Config.DBName = testDBName
 	err := models.SetDatabase(models.InstanceSQLite)
 	suite.Assert().Nil(err)
 
-	for _, model := range models.GetModels() {
+	for _, model := range getTestModels() {
 		err := models.DB.AutoMigrate(model)
 		suite.Assert().Nil(err)
 	}
