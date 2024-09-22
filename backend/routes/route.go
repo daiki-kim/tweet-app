@@ -48,6 +48,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 			tweetRouterWithAuth := v1Router.Group("/tweet", middlewares.JwtTokenVerifier())
 			{
 				tweetRouterWithAuth.POST("/", tweetController.CreateTweet)
+				tweetRouterWithAuth.GET("/:id", tweetController.GetTweet)
+				tweetRouterWithAuth.GET("/user/:user_id", tweetController.GetUserTweets)
 			}
 
 		}

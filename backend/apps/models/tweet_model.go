@@ -35,13 +35,23 @@ func Str2TweetType(tweetTypeString string) (TweetType, error) {
 
 // convert the enum from the database to the custom type
 func (t *TweetType) Scan(value interface{}) error {
-	str, ok := value.(string)
-	if !ok {
+	switch v := value.(type) {
+	case string:
+		*t = TweetType(v) // convert string to enum
+	case []byte:
+		*t = TweetType(string(v)) // convert []byte to string before convert to enum
+	default:
 		return errors.New("type assertion to string failed")
 	}
 
-	*t = TweetType(str)
 	return nil
+	// str, ok := value.(string)
+	// if !ok {
+	// 	return errors.New("type assertion to string failed")
+	// }
+
+	// *t = TweetType(str)
+	// return nil
 }
 
 // convert the custom type to the enum

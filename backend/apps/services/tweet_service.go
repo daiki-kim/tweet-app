@@ -7,6 +7,8 @@ import (
 
 type ITweetService interface {
 	CreateTweet(userId uint, tweetTypeString string, content string) error
+	GetTweet(id uint) (*models.Tweet, error)
+	GetUserTweets(userId uint) ([]*models.Tweet, error)
 }
 
 type TweetService struct {
@@ -41,4 +43,12 @@ func (s *TweetService) CreateTweet(userId uint, tweetTypeString string, content 
 	}
 
 	return nil
+}
+
+func (s *TweetService) GetTweet(id uint) (*models.Tweet, error) {
+	return s.repository.GetTweet(id)
+}
+
+func (s *TweetService) GetUserTweets(userId uint) ([]*models.Tweet, error) {
+	return s.repository.GetUserTweets(userId)
 }
