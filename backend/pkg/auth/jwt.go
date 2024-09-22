@@ -15,7 +15,7 @@ const (
 	Subject                = "AccessToken"
 	Issuer                 = "github.com/daiki-kim/tweet-app"
 	Audience               = "github.com/daiki-kim/tweet-app"
-	TokenExpiration        = time.Minute * time.Duration(10)
+	TokenExpiration        = time.Minute * time.Duration(60)
 	RefreshTokenExpiration = time.Hour * time.Duration(1)
 )
 
