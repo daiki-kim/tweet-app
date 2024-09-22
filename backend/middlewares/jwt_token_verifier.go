@@ -40,7 +40,7 @@ func JwtTokenVerifier() gin.HandlerFunc {
 		}
 
 		// set email to context
-		ctx.Set("email", claims.Email)
+		ctx.Set("user_id", claims.UserId)
 
 		ctx.Next()
 	}
