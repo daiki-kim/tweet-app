@@ -9,7 +9,7 @@ import (
 )
 
 type ITweetRepository interface {
-	CreateTweet(tweet *models.Tweet) error
+	CreateTweet(tweet *models.Tweet) (*models.Tweet, error)
 	GetTweet(id uint) (*models.Tweet, error)
 	GetUserTweets(userId uint) ([]*models.Tweet, error)
 }
@@ -22,15 +22,15 @@ func NewTweetRepository(db *gorm.DB) ITweetRepository {
 	return &TweetRepository{DB: db}
 }
 
-func (r *TweetRepository) CreateTweet(tweet *models.Tweet) error {
+func (r *TweetRepository) CreateTweet(tweet *models.Tweet) (*models.Tweet, error) {
 	result := r.DB.Create(tweet)
 	if result.Error != nil {
 		log.Println("failed to create tweet: ", result.Error)
-		return result.Error
+		return nil, result.Error
 	}
 
 	log.Println("created tweet: ", tweet)
-	return nil
+	return tweet, nil
 }
 
 func (r *TweetRepository) GetTweet(id uint) (*models.Tweet, error) {

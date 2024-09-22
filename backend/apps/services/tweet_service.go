@@ -6,7 +6,7 @@ import (
 )
 
 type ITweetService interface {
-	CreateTweet(userId uint, tweetTypeString string, content string) error
+	CreateTweet(userId uint, tweetTypeString string, content string) (*models.Tweet, error)
 	GetTweet(id uint) (*models.Tweet, error)
 	GetUserTweets(userId uint) ([]*models.Tweet, error)
 }
@@ -19,7 +19,7 @@ func NewTweetService(repository repositories.ITweetRepository) ITweetService {
 	return &TweetService{repository: repository}
 }
 
-func (s *TweetService) CreateTweet(userId uint, tweetTypeString string, content string) error {
+func (s *TweetService) CreateTweet(userId uint, tweetTypeString string, content string) (*models.Tweet, error) {
 	var (
 		tweetType models.TweetType
 		err       error
@@ -28,7 +28,7 @@ func (s *TweetService) CreateTweet(userId uint, tweetTypeString string, content 
 	// stringで受け取ったtweetTypeStringをenumに変換
 	tweetType, err = models.Str2TweetType(tweetTypeString)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	tweet := &models.Tweet{
@@ -37,12 +37,7 @@ func (s *TweetService) CreateTweet(userId uint, tweetTypeString string, content 
 		Content: content,
 	}
 
-	err = s.repository.CreateTweet(tweet)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.repository.CreateTweet(tweet)
 }
 
 func (s *TweetService) GetTweet(id uint) (*models.Tweet, error) {

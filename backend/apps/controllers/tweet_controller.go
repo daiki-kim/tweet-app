@@ -36,12 +36,13 @@ func (c *TweetController) CreateTweet(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid input data"})
 	}
 
-	if err := c.service.CreateTweet(userId, input.Type, input.Content); err != nil {
+	tweet, err := c.service.CreateTweet(userId, input.Type, input.Content)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create tweet"})
 		return
 	}
 
-	ctx.Status(http.StatusCreated)
+	ctx.JSON(http.StatusCreated, gin.H{"data": tweet})
 }
 
 func (c *TweetController) GetTweet(ctx *gin.Context) {
