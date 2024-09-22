@@ -4,6 +4,7 @@ import (
 	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
 	"github.com/daiki-kim/tweet-app/backend/apps/repositories"
 	"github.com/daiki-kim/tweet-app/backend/apps/services"
+	"github.com/daiki-kim/tweet-app/backend/middlewares"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	userRepository := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepository)
 	authController := controllers.NewAuthController(authService)
+
+	tweetRepository := repositories.NewTweetRepository(db)
+	tweetService := services.NewTweetService(tweetRepository)
+	tweetController := controllers.NewTweetController(tweetService)
 
 	r := gin.Default()
 
@@ -27,9 +32,9 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		{
 			signupRouter := v1Router.Group("/signup")
 			{
-				signupRouter.GET("/")                                        // TODO: User data作成画面へredirect 2024-08-15
+				signupRouter.GET("/")                                        // TODO: Frontend実装後にUser data作成画面へredirectする 2024-08-15
 				signupRouter.POST("/", authController.Signup)                // User data送信先
-				signupRouter.GET("/oauth")                                   // TODO: OAuthからのUser data作成画面へredirect 2024-08-15
+				signupRouter.GET("/oauth")                                   // TODO: Frontend実装後にOAuthからのUser data作成画面へredirectする 2024-08-15
 				signupRouter.POST("/oauth", authController.SignupUsingOAuth) // OAuth経由のUser data送信先
 			}
 
@@ -38,6 +43,11 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 				loginRouter.GET("/")                                      // TODO: User data入力画面へredirect 2024-08-15
 				loginRouter.POST("/", authController.Login)               // User data送信先
 				loginRouter.GET("/oauth", authController.LoginUsingOAuth) // OAuthからのリダイレクト先
+			}
+
+			tweetRouterWithAuth := v1Router.Group("/tweet", middlewares.JwtTokenVerifier())
+			{
+				tweetRouterWithAuth.POST("/", tweetController.CreateTweet)
 			}
 
 		}

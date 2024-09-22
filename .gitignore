@@ -31,3 +31,6 @@ tmp
 # Database
 tweet_app_database
 .DS_Store
+
+# VS Code
+.vscode

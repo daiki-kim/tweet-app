@@ -28,14 +28,14 @@ var (
 
 // custom claim struct with userId
 type CustomClaim struct {
-	Email string
+	UserId string
 	jwt.RegisteredClaims
 }
 
 // create new claim with userId
-func NewClaim(email string) *CustomClaim {
+func NewClaim(userId string) *CustomClaim {
 	return &CustomClaim{
-		Email: email,
+		UserId: userId,
 	}
 }
 

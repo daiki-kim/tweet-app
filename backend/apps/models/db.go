@@ -24,6 +24,7 @@ var (
 func GetModels() []interface{} {
 	return []interface{}{
 		&User{},
+		&Tweet{},
 	}
 }
 

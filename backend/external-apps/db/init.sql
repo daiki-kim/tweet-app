@@ -22,9 +22,10 @@ CREATE TABLE followers (
 CREATE TABLE tweets (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    type ENUM('normal', 'retweet', 'reply', 'quote') NOT NULL,
+    type ENUM('text', 'image', 'video') NOT NULL,
     content VARCHAR(140) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

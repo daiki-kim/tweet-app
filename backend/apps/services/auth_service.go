@@ -7,6 +7,7 @@ import (
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/apps/repositories"
+	utils "github.com/daiki-kim/tweet-app/backend/pkg"
 	"github.com/daiki-kim/tweet-app/backend/pkg/auth"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -93,15 +94,17 @@ func (s *AuthService) LoginUsingOAuth(email string) (*LoginResponse, error) {
 		return nil, err
 	}
 
+	userIdString := utils.Uint2String(user.ID)
+
 	// Claim構造体のポインタを生成して、トークンを発行
-	claim := auth.NewClaim(user.Email)
+	claim := auth.NewClaim(userIdString)
 	token, err := claim.GenerateToken()
 	if err != nil {
 		return nil, err
 	}
 
 	// Claim構造体のポインタを生成して、リフレッシュトークンを発行
-	refreshTokenClaim := auth.NewClaim(user.Email)
+	refreshTokenClaim := auth.NewClaim(userIdString)
 	refreshToken, err := refreshTokenClaim.GenerateRefreshToken()
 	if err != nil {
 		return nil, err
@@ -123,20 +126,22 @@ func (s *AuthService) Login(email, password string) (*LoginResponse, error) {
 		return nil, err
 	}
 
+	userIdString := utils.Uint2String(user.ID)
+
 	// ハッシュ化されたパスワードと入力されたパスワードを比較
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, errors.New("invalid password")
 	}
 
 	// Claim構造体のポインタを生成してトークンを発行
-	claim := auth.NewClaim(user.Email)
+	claim := auth.NewClaim(userIdString)
 	token, err := claim.GenerateToken()
 	if err != nil {
 		return nil, err
 	}
 
 	// Claim構造体のポインタを生成してリフレッシュトークンを発行
-	refreshTokenClaim := auth.NewClaim(user.Email)
+	refreshTokenClaim := auth.NewClaim(userIdString)
 	refreshToken, err := refreshTokenClaim.GenerateRefreshToken()
 	if err != nil {
 		return nil, err

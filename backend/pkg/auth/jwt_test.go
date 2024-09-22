@@ -18,7 +18,7 @@ var (
 // カスタムクレームからトークンが生成されるテスト
 func TestGenerateTokenValidClaims(t *testing.T) {
 	// テスト用のclaimを作成
-	testCustomClaim := auth.NewClaim("test@example.com")
+	testCustomClaim := auth.NewClaim("1")
 
 	// Act
 	token, err := testCustomClaim.GenerateToken()
@@ -35,7 +35,7 @@ func TestGenerateTokenValidClaims(t *testing.T) {
 // カスタムクレームからリフレッシュトークンが生成されるテスト
 func TestGenerateRefreshTokenValidClaims(t *testing.T) {
 	// テスト用のclaimを作成
-	testCustomClaim := auth.NewClaim("test@example.com")
+	testCustomClaim := auth.NewClaim("1")
 
 	// Act
 	token, err := testCustomClaim.GenerateRefreshToken()
@@ -52,7 +52,7 @@ func TestGenerateRefreshTokenValidClaims(t *testing.T) {
 // リフレッシュトークンをアップデートされるテスト
 func TestUpdateRefreshToken(t *testing.T) {
 	// テスト用のclaimを作成
-	testCustomClaim := auth.NewClaim("test@example.com")
+	testCustomClaim := auth.NewClaim("1")
 
 	// Act
 	token, err := testCustomClaim.UpdateRefreshToken()
@@ -67,9 +67,9 @@ func TestUpdateRefreshToken(t *testing.T) {
 }
 
 // テスト用のカスタムクレームを持つトークンを生成する関数
-func generateTestToken(email string, signKey []byte) (string, error) {
+func generateTestToken(userId string, signKey []byte) (string, error) {
 	claims := &auth.CustomClaim{
-		Email: email,
+		UserId: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    auth.Issuer,
 			Subject:   auth.Subject,
@@ -87,8 +87,8 @@ func generateTestToken(email string, signKey []byte) (string, error) {
 // 有効なトークンのテスト
 func TestValidateToken_ValidToken(t *testing.T) {
 	// テスト用のトークンを生成
-	email := "test@example.com"
-	tokenString, err := generateTestToken(email, testSignKey)
+	userId := "1"
+	tokenString, err := generateTestToken(userId, testSignKey)
 	if err != nil {
 		t.Fatalf("Failed to generate test token: %v", err)
 	}
@@ -100,16 +100,16 @@ func TestValidateToken_ValidToken(t *testing.T) {
 	}
 
 	// クレームが正しいか確認
-	if claims.Email != email {
-		t.Errorf("Expected email %v, got %v", email, claims.Email)
+	if claims.UserId != userId {
+		t.Errorf("Expected email %v, got %v", userId, claims.UserId)
 	}
 }
 
 // 無効な署名のトークンのテスト
 func TestValidateToken_InvalidSignature(t *testing.T) {
 	// テスト用のトークンを生成
-	email := "test@example.com"
-	tokenString, err := generateTestToken(email, []byte("wrong_secret_key"))
+	userId := "1"
+	tokenString, err := generateTestToken(userId, []byte("wrong_secret_key"))
 	if err != nil {
 		t.Fatalf("Failed to generate test token: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestValidateToken_InvalidSignature(t *testing.T) {
 func TestValidateToken_ExpiredToken(t *testing.T) {
 	// 期限切れのトークンを生成
 	claims := &auth.CustomClaim{
-		Email: "test@example.com",
+		UserId: "1",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    auth.Issuer,
 			Subject:   auth.Subject,
