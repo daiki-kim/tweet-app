@@ -14,6 +14,7 @@ type ITweetController interface {
 	CreateTweet(ctx *gin.Context)
 	GetTweet(ctx *gin.Context)
 	GetUserTweets(ctx *gin.Context)
+	UpdateTweet(ctx *gin.Context)
 }
 
 type TweetController struct {
@@ -27,7 +28,7 @@ func NewTweetController(service services.ITweetService) ITweetController {
 func (c *TweetController) CreateTweet(ctx *gin.Context) {
 	userId := getUserIdFromCtx(ctx)
 	if userId == 0 {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert user id to uint64"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user id"})
 		return
 	}
 
@@ -48,7 +49,7 @@ func (c *TweetController) CreateTweet(ctx *gin.Context) {
 func (c *TweetController) GetTweet(ctx *gin.Context) {
 	tweetId := getIdFromReq(ctx, "id")
 	if tweetId == 0 {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert tweet id to uint64"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tweet id"})
 		return
 	}
 
@@ -64,7 +65,7 @@ func (c *TweetController) GetTweet(ctx *gin.Context) {
 func (c *TweetController) GetUserTweets(ctx *gin.Context) {
 	userId := getIdFromReq(ctx, "user_id")
 	if userId == 0 {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert user id to uint64"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user id"})
 		return
 	}
 
@@ -80,6 +81,39 @@ func (c *TweetController) GetUserTweets(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, tweets)
+}
+
+func (c *TweetController) UpdateTweet(ctx *gin.Context) {
+	userId := getUserIdFromCtx(ctx)
+	if userId == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user id"})
+		return
+	}
+
+	tweetId := getIdFromReq(ctx, "id")
+	if tweetId == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tweet id"})
+		return
+	}
+
+	var updateInput dtos.UpdateTweetInput
+	if err := ctx.ShouldBindJSON(&updateInput); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid input data"})
+		return
+	}
+
+	tweet, err := c.service.UpdateTweet(tweetId, userId, &updateInput)
+	if err != nil {
+		if err.Error() == "this tweet is not yours" {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "this tweet is not yours"})
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update tweet"})
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, tweet)
 }
 
 // contextからstringのuser_idを取得してuintで返す

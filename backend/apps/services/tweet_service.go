@@ -1,6 +1,9 @@
 package services
 
 import (
+	"errors"
+
+	"github.com/daiki-kim/tweet-app/backend/apps/dtos"
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/apps/repositories"
 )
@@ -9,6 +12,7 @@ type ITweetService interface {
 	CreateTweet(userId uint, tweetTypeString string, content string) (*models.Tweet, error)
 	GetTweet(id uint) (*models.Tweet, error)
 	GetUserTweets(userId uint) ([]*models.Tweet, error)
+	UpdateTweet(id, userId uint, inputTweet *dtos.UpdateTweetInput) (*models.Tweet, error)
 }
 
 type TweetService struct {
@@ -46,4 +50,29 @@ func (s *TweetService) GetTweet(id uint) (*models.Tweet, error) {
 
 func (s *TweetService) GetUserTweets(userId uint) ([]*models.Tweet, error) {
 	return s.repository.GetUserTweets(userId)
+}
+
+func (s *TweetService) UpdateTweet(id, userId uint, inputTweet *dtos.UpdateTweetInput) (*models.Tweet, error) {
+	updatedTweet, err := s.repository.GetTweet(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if updatedTweet.UserID != userId {
+		return nil, errors.New("this tweet is not yours")
+	}
+
+	if inputTweet.Type != "" {
+		tweetType, err := models.Str2TweetType(inputTweet.Type)
+		if err != nil {
+			return nil, err
+		}
+		updatedTweet.Type = tweetType
+	}
+
+	if inputTweet.Content != "" {
+		updatedTweet.Content = inputTweet.Content
+	}
+
+	return s.repository.UpdateTweet(updatedTweet)
 }

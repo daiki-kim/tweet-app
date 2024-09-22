@@ -12,6 +12,7 @@ type ITweetRepository interface {
 	CreateTweet(tweet *models.Tweet) (*models.Tweet, error)
 	GetTweet(id uint) (*models.Tweet, error)
 	GetUserTweets(userId uint) ([]*models.Tweet, error)
+	UpdateTweet(updateTweet *models.Tweet) (*models.Tweet, error)
 }
 
 type TweetRepository struct {
@@ -58,4 +59,13 @@ func (r *TweetRepository) GetUserTweets(userId uint) ([]*models.Tweet, error) {
 	}
 
 	return tweets, nil
+}
+
+func (r *TweetRepository) UpdateTweet(updateTweet *models.Tweet) (*models.Tweet, error) {
+	result := r.DB.Save(updateTweet)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return updateTweet, nil
 }
