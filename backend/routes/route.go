@@ -51,19 +51,20 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 			tweetRouterWithAuth := v1Router.Group("/tweet", middlewares.JwtTokenVerifier())
 			{
-				tweetRouterWithAuth.POST("/", tweetController.CreateTweet)
-				tweetRouterWithAuth.GET("/:id", tweetController.GetTweet)
-				tweetRouterWithAuth.GET("/user/:user_id", tweetController.GetUserTweets)
-				tweetRouterWithAuth.PUT("/:id", tweetController.UpdateTweet)
-				tweetRouterWithAuth.DELETE("/:id", tweetController.DeleteTweet)
+				tweetRouterWithAuth.POST("/", tweetController.CreateTweet)               // reqestのbodyの内容のtweetを作成
+				tweetRouterWithAuth.GET("/:id", tweetController.GetTweet)                // idの*tweet{}を取得
+				tweetRouterWithAuth.GET("/user/:user_id", tweetController.GetUserTweets) // user_idのユーザーのtweetリストを取得
+				tweetRouterWithAuth.PUT("/:id", tweetController.UpdateTweet)             // idのtweetを更新
+				tweetRouterWithAuth.DELETE("/:id", tweetController.DeleteTweet)          // idのtweetを削除
 			}
 
 			followerRouterWithAuth := v1Router.Group("/follower", middlewares.JwtTokenVerifier())
 			{
-				followerRouterWithAuth.POST("/", followerController.Follow)
-				followerRouterWithAuth.GET("/:id", followerController.GetFollower)
-				followerRouterWithAuth.GET("/followers/:followee_id", followerController.GetFollowers) // followee_idのユーザーをフォローしているユーザ一覧を取得
-				followerRouterWithAuth.DELETE("/:id", followerController.DeleteFollower)
+				followerRouterWithAuth.POST("/", followerController.Follow)                            // reqestのbodyに指定したfolloee_idとfollower_id=user_idのfollowerを作成(フォローする)
+				followerRouterWithAuth.GET("/:id", followerController.GetFollower)                     // idのfollowerを取得
+				followerRouterWithAuth.GET("/follows/:follower_id", followerController.GetFollows)     // follower_idのユーザーがフォローしているfollowerリストを取得
+				followerRouterWithAuth.GET("/followers/:followee_id", followerController.GetFollowers) // followee_idのユーザーをフォローしているfollowerリストを取得
+				followerRouterWithAuth.DELETE("/:id", followerController.DeleteFollower)               // idのfollowerを削除
 			}
 		}
 	}

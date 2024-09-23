@@ -10,6 +10,7 @@ import (
 type IFollowerRepository interface {
 	CreateFollower(follower *models.Follower) (*models.Follower, error)
 	GetFollower(id uint) (*models.Follower, error)
+	GetFollowees(followerId uint) ([]*models.Follower, error)
 	GetFollowers(followeeId uint) ([]*models.Follower, error)
 	DeleteFollower(id uint) error
 }
@@ -41,6 +42,22 @@ func (r *FollowerRepository) GetFollower(id uint) (*models.Follower, error) {
 	return &follower, nil
 }
 
+// followerIdのユーザーがフォローしているユーザーを取得するためのメソッド
+// followerIdのユーザーがフォローしているユーザーデータを含むFollowerを取得
+func (r *FollowerRepository) GetFollowees(followerId uint) ([]*models.Follower, error) {
+	var followers []*models.Follower
+	result := r.DB.Preload("Followee").Where("follower_id = ?", followerId).Find(&followers)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, errors.New("followers not found")
+	} else if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return followers, nil
+}
+
+// followeeIdのユーザーをフォローしているユーザーを取得するためのメソッド
+// followeeIdのユーザーをフォローしているユーザーデータを含むFollowerを取得
 func (r *FollowerRepository) GetFollowers(followeeId uint) ([]*models.Follower, error) {
 	var followers []*models.Follower
 	result := r.DB.Preload("Follower").Where("followee_id = ?", followeeId).Find(&followers)

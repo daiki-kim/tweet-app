@@ -10,6 +10,7 @@ import (
 type IFollowerService interface {
 	Follow(followerId, followeeId uint) (*models.Follower, error)
 	GetFollower(id uint) (*models.Follower, error)
+	GetFollows(followerId uint) ([]*models.Follower, error)
 	GetFollowers(followeeId uint) ([]*models.Follower, error)
 	DeleteFollower(id uint, user_id uint) error
 }
@@ -33,6 +34,10 @@ func (s *FollowerService) Follow(followerId, followeeId uint) (*models.Follower,
 
 func (s *FollowerService) GetFollower(id uint) (*models.Follower, error) {
 	return s.repository.GetFollower(id)
+}
+
+func (s *FollowerService) GetFollows(followerId uint) ([]*models.Follower, error) {
+	return s.repository.GetFollowees(followerId)
 }
 
 func (s *FollowerService) GetFollowers(followeeId uint) ([]*models.Follower, error) {
