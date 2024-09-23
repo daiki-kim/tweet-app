@@ -18,6 +18,7 @@ type DBSQLiteSuite struct {
 func getTestModels() []interface{} {
 	return []interface{}{
 		&models.User{},
+		&models.Follower{},
 	}
 }
 
