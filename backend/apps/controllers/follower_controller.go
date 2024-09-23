@@ -11,6 +11,7 @@ import (
 type IFollowerController interface {
 	Follow(ctx *gin.Context)
 	GetFollower(ctx *gin.Context)
+	GetFollows(ctx *gin.Context)
 	GetFollowers(ctx *gin.Context)
 	DeleteFollower(ctx *gin.Context)
 }
@@ -45,6 +46,27 @@ func (c *FollowerController) Follow(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, follower)
 }
 
+func (c *FollowerController) GetFollows(ctx *gin.Context) {
+	followerId := getIdFromReq(ctx, "follower_id")
+	if followerId == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get follower id"})
+		return
+	}
+
+	followers, err := c.service.GetFollows(followerId)
+	if err != nil {
+		if err.Error() == "followers not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "follows not found"})
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get follows"})
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, followers)
+}
+
 func (c *FollowerController) GetFollowers(ctx *gin.Context) {
 	followeeId := getIdFromReq(ctx, "followee_id")
 	if followeeId == 0 {
@@ -52,7 +74,7 @@ func (c *FollowerController) GetFollowers(ctx *gin.Context) {
 		return
 	}
 
-	followersUserData, err := c.service.GetFollowers(followeeId)
+	followers, err := c.service.GetFollowers(followeeId)
 	if err != nil {
 		if err.Error() == "followers not found" {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -63,7 +85,7 @@ func (c *FollowerController) GetFollowers(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(http.StatusOK, followersUserData)
+	ctx.JSON(http.StatusOK, followers)
 }
 
 func (c *FollowerController) DeleteFollower(ctx *gin.Context) {

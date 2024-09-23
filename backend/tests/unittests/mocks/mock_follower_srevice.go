@@ -26,6 +26,15 @@ func (m *MockFollowerService) GetFollower(id uint) (*models.Follower, error) {
 	return args.Get(0).(*models.Follower), args.Error(1)
 }
 
+func (m *MockFollowerService) GetFollows(followerId uint) ([]*models.Follower, error) {
+	args := m.Called(followerId)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).([]*models.Follower), args.Error(1)
+}
+
 func (m *MockFollowerService) GetFollowers(followeeId uint) ([]*models.Follower, error) {
 	args := m.Called(followeeId)
 	if args.Get(0) == nil {
