@@ -1,7 +1,7 @@
 package services
 
 import (
-	"log"
+	"errors"
 
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
 	"github.com/daiki-kim/tweet-app/backend/apps/repositories"
@@ -9,7 +9,9 @@ import (
 
 type IFollowerService interface {
 	Follow(followerId, followeeId uint) (*models.Follower, error)
-	GetFollowers(followeeId uint) ([]*models.User, error)
+	GetFollower(id uint) (*models.Follower, error)
+	GetFollowers(followeeId uint) ([]*models.Follower, error)
+	DeleteFollower(id uint, user_id uint) error
 }
 
 type FollowerService struct {
@@ -29,20 +31,23 @@ func (s *FollowerService) Follow(followerId, followeeId uint) (*models.Follower,
 	return s.repository.CreateFollower(follower)
 }
 
-func (s *FollowerService) GetFollowers(followeeId uint) ([]*models.User, error) {
-	followers, err := s.repository.GetFollowers(followeeId)
+func (s *FollowerService) GetFollower(id uint) (*models.Follower, error) {
+	return s.repository.GetFollower(id)
+}
+
+func (s *FollowerService) GetFollowers(followeeId uint) ([]*models.Follower, error) {
+	return s.repository.GetFollowers(followeeId)
+}
+
+func (s *FollowerService) DeleteFollower(id uint, user_id uint) error {
+	follower, err := s.repository.GetFollower(id)
 	if err != nil {
-		return nil, err
-	}
-	log.Println("[GetFollowers] followers: ", followers)
-
-	var followersUserData []*models.User
-	for _, follower := range followers {
-		log.Println("[GetFollowers] follower: ", follower)
-		followersUserData = append(followersUserData, follower.Follower)
+		return err
 	}
 
-	log.Println("[GetFollowers] followersUserData: ", followersUserData)
+	if follower.FollowerID != user_id {
+		return errors.New("you don't have permission to delete this follower")
+	}
 
-	return followersUserData, nil
+	return s.repository.DeleteFollower(id)
 }

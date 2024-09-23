@@ -55,7 +55,7 @@ func (suite *FollowerTestSuite) TestFollowerRepository() {
 	}
 
 	// prepare test follower data
-	testFollower1Follws2 := &models.Follower{
+	testFollower1Follows2 := &models.Follower{
 		FollowerID: 1,
 		FolloweeID: 2,
 	}
@@ -77,7 +77,7 @@ func (suite *FollowerTestSuite) TestFollowerRepository() {
 	suite.Nil(err)
 
 	// create followers
-	returnFollower1Follws2, err := testFollowerRepository.CreateFollower(testFollower1Follws2)
+	returnFollower1Follws2, err := testFollowerRepository.CreateFollower(testFollower1Follows2)
 	suite.Nil(err)
 	suite.Equal(uint(1), returnFollower1Follws2.FollowerID)
 	suite.Equal(uint(2), returnFollower1Follws2.FolloweeID)
@@ -95,4 +95,8 @@ func (suite *FollowerTestSuite) TestFollowerRepository() {
 	suite.Equal(testuser1.Email, followers[0].Follower.Email)
 	suite.Equal(testuser3.Name, followers[1].Follower.Name)
 	suite.Equal(testuser3.Email, followers[1].Follower.Email)
+
+	// delete followers
+	err = testFollowerRepository.DeleteFollower(1) // delete follower1
+	suite.Nil(err)
 }

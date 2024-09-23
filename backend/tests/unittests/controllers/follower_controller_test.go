@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
@@ -81,22 +80,20 @@ func TestGetFollowersSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// Follower responseを準備
-	followerResponse := []*models.User{
+	followerResponse := []*models.Follower{
 		{
-			ID:        1,
-			Name:      "testuser1",
-			Email:     "test1@example.com",
-			Password:  "testpassword",
-			Dob:       time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-			CreatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+			ID:         1,
+			FollowerID: 1,
+			FolloweeID: 3,
+			Follower:   nil,
+			Followee:   nil,
 		},
 		{
-			ID:        2,
-			Name:      "testuser2",
-			Email:     "test2@example.com",
-			Password:  "testpassword",
-			Dob:       time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-			CreatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+			ID:         2,
+			FollowerID: 2,
+			FolloweeID: 3,
+			Follower:   nil,
+			Followee:   nil,
 		},
 	}
 
@@ -107,19 +104,17 @@ func TestGetFollowersSuccess(t *testing.T) {
 	followerResponseJson := `[
 		{
 			"id": 1,
-			"name": "testuser1",
-			"email": "test1@example.com",
-			"password": "testpassword",
-			"dob": "2020-01-01T00:00:00Z",
-			"created_at": "2020-01-01T00:00:00Z"
+			"follower_id": 1,
+			"followee_id": 3,
+			"follower": null,
+			"followee": null
 		},
 		{
 			"id": 2,
-			"name": "testuser2",
-			"email": "test2@example.com",
-			"password": "testpassword",
-			"dob": "2020-01-01T00:00:00Z",
-			"created_at": "2020-01-01T00:00:00Z"
+			"follower_id": 2,
+			"followee_id": 3,
+			"follower": null,
+			"followee": null
 		}
 	]`
 
@@ -127,6 +122,35 @@ func TestGetFollowersSuccess(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.JSONEq(t, followerResponseJson, w.Body.String())
+	mockFollowerService.AssertExpectations(t)
+}
+
+func TestDeleteFollower(t *testing.T) {
+	// モックサービスを準備
+	mockFollowerService, testFollowerController := prepareTestController()
+
+	// ginエンジンの設定
+	r := setupTestRouter()
+
+	// DeleteFollower APIを準備
+	r.DELETE("/api/v1/follower/:id", func(c *gin.Context) {
+		// テストのために context に followerId を設定
+		c.Set("user_id", "1")
+		testFollowerController.DeleteFollower(c)
+	})
+
+	// リクエスト作成
+	req, _ := http.NewRequest(http.MethodDelete, "/api/v1/follower/1", nil)
+
+	// レスポンスを準備
+	w := httptest.NewRecorder()
+
+	// モックサービスを準備
+	mockFollowerService.On("DeleteFollower", uint(1), uint(1)).Return(nil)
+
+	// リクエスト実行
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockFollowerService.AssertExpectations(t)
 }
 
