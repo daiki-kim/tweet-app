@@ -17,3 +17,12 @@ func (m *MockFollowerService) Follow(followerId, followeeId uint) (*models.Follo
 
 	return args.Get(0).(*models.Follower), args.Error(1)
 }
+
+func (m *MockFollowerService) GetFollowers(followeeId uint) ([]*models.User, error) {
+	args := m.Called(followeeId)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).([]*models.User), args.Error(1)
+}

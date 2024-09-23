@@ -34,35 +34,65 @@ func (suite *FollowerTestSuite) AfterTest(suiteName, testName string) {
 }
 
 func (suite *FollowerTestSuite) TestFollowerRepository() {
+	// prepare test user data
 	testuser1 := &models.User{
 		Name:     "testuser1",
 		Email:    "test1@example.com",
 		Password: "testpassword",
 		Dob:      time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
-
 	testuser2 := &models.User{
 		Name:     "testuser2",
 		Email:    "test2@example.com",
 		Password: "testpassword",
 		Dob:      time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
+	testuser3 := &models.User{
+		Name:     "testuser3",
+		Email:    "test3@example.com",
+		Password: "testpassword",
+		Dob:      time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
 
-	testFollower := &models.Follower{
+	// prepare test follower data
+	testFollower1Follws2 := &models.Follower{
 		FollowerID: 1,
 		FolloweeID: 2,
 	}
+	testFollower3Follows2 := &models.Follower{
+		FollowerID: 3,
+		FolloweeID: 2,
+	}
 
+	// prepare test repository
 	testUserRepository := repositories.NewUserRepository(models.DB)
 	testFollowerRepository := repositories.NewFollowerRepository(models.DB)
 
+	// create users
 	err := testUserRepository.CreateUser(testuser1)
 	suite.Nil(err)
 	err = testUserRepository.CreateUser(testuser2)
 	suite.Nil(err)
-
-	returnFollower, err := testFollowerRepository.CreateFollower(testFollower)
+	err = testUserRepository.CreateUser(testuser3)
 	suite.Nil(err)
-	suite.Equal(uint(1), returnFollower.FollowerID)
-	suite.Equal(uint(2), returnFollower.FolloweeID)
+
+	// create followers
+	returnFollower1Follws2, err := testFollowerRepository.CreateFollower(testFollower1Follws2)
+	suite.Nil(err)
+	suite.Equal(uint(1), returnFollower1Follws2.FollowerID)
+	suite.Equal(uint(2), returnFollower1Follws2.FolloweeID)
+
+	returnFollower3Follows2, err := testFollowerRepository.CreateFollower(testFollower3Follows2)
+	suite.Nil(err)
+	suite.Equal(uint(3), returnFollower3Follows2.FollowerID)
+	suite.Equal(uint(2), returnFollower3Follows2.FolloweeID)
+
+	// get followers
+	followers, err := testFollowerRepository.GetFollowers(2)
+	suite.Nil(err)
+	suite.Equal(2, len(followers))
+	suite.Equal(testuser1.Name, followers[0].Follower.Name)
+	suite.Equal(testuser1.Email, followers[0].Follower.Email)
+	suite.Equal(testuser3.Name, followers[1].Follower.Name)
+	suite.Equal(testuser3.Email, followers[1].Follower.Email)
 }
