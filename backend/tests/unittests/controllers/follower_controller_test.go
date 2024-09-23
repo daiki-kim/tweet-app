@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/daiki-kim/tweet-app/backend/apps/controllers"
 	"github.com/daiki-kim/tweet-app/backend/apps/models"
@@ -15,15 +16,13 @@ import (
 
 func TestFollowSuccess(t *testing.T) {
 	// モックサービスを準備
-	mockFollowerService := &mocks.MockFollowerService{}
-	testFollowerController := controllers.NewFollowerController(mockFollowerService)
+	mockFollowerService, testFollowerController := prepareTestController()
 
 	// ginエンジンの設定
-	gin.SetMode(gin.TestMode)
-	r := gin.Default()
+	r := setupTestRouter()
 
 	// Follow APIを準備
-	r.POST("/api/v1/follow", func(c *gin.Context) {
+	r.POST("/api/v1/follower", func(c *gin.Context) {
 		// テストのために context に followerId を設定
 		c.Set("user_id", "1")
 		testFollowerController.Follow(c)
@@ -31,7 +30,7 @@ func TestFollowSuccess(t *testing.T) {
 
 	// リクエスト作成
 	reqBody := []byte(`{"followee_id": 2}`)
-	req, _ := http.NewRequest(http.MethodPost, "/api/v1/follow", bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/follower", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	// レスポンスを準備
@@ -63,4 +62,83 @@ func TestFollowSuccess(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.JSONEq(t, followerResponseJson, w.Body.String())
 	mockFollowerService.AssertExpectations(t)
+}
+
+func TestGetFollowersSuccess(t *testing.T) {
+	// モックサービスを準備
+	mockFollowerService, testFollowerController := prepareTestController()
+
+	// ginエンジンの設定
+	r := setupTestRouter()
+
+	// GetFollowers APIを準備
+	r.GET("/api/v1/follower/:followee_id", testFollowerController.GetFollowers)
+
+	// リクエスト作成
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/follower/3", nil)
+
+	// レスポンスを準備
+	w := httptest.NewRecorder()
+
+	// Follower responseを準備
+	followerResponse := []*models.User{
+		{
+			ID:        1,
+			Name:      "testuser1",
+			Email:     "test1@example.com",
+			Password:  "testpassword",
+			Dob:       time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+			CreatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			ID:        2,
+			Name:      "testuser2",
+			Email:     "test2@example.com",
+			Password:  "testpassword",
+			Dob:       time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+			CreatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+		},
+	}
+
+	// モックサービスを準備
+	mockFollowerService.On("GetFollowers", uint(3)).Return(followerResponse, nil)
+
+	// follower responseを準備
+	followerResponseJson := `[
+		{
+			"id": 1,
+			"name": "testuser1",
+			"email": "test1@example.com",
+			"password": "testpassword",
+			"dob": "2020-01-01T00:00:00Z",
+			"created_at": "2020-01-01T00:00:00Z"
+		},
+		{
+			"id": 2,
+			"name": "testuser2",
+			"email": "test2@example.com",
+			"password": "testpassword",
+			"dob": "2020-01-01T00:00:00Z",
+			"created_at": "2020-01-01T00:00:00Z"
+		}
+	]`
+
+	// リクエスト実行
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, followerResponseJson, w.Body.String())
+	mockFollowerService.AssertExpectations(t)
+}
+
+func prepareTestController() (*mocks.MockFollowerService, controllers.IFollowerController) {
+	mockFollowerService := &mocks.MockFollowerService{}
+	testFollowerController := controllers.NewFollowerController(mockFollowerService)
+
+	return mockFollowerService, testFollowerController
+}
+
+func setupTestRouter() *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	return r
 }

@@ -17,3 +17,12 @@ func (m *MockFollowerRepository) CreateFollower(follower *models.Follower) (*mod
 
 	return args.Get(0).(*models.Follower), args.Error(1)
 }
+
+func (m *MockFollowerRepository) GetFollowers(followeeId uint) ([]*models.Follower, error) {
+	args := m.Called(followeeId)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).([]*models.Follower), args.Error(1)
+}
