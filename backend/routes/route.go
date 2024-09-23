@@ -61,6 +61,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 			followerRouterWithAuth := v1Router.Group("/follower", middlewares.JwtTokenVerifier())
 			{
 				followerRouterWithAuth.POST("/", followerController.Follow)
+				followerRouterWithAuth.GET("/:followee_id", followerController.GetFollowers)
 			}
 		}
 	}

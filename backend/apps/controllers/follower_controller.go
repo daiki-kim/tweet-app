@@ -10,6 +10,7 @@ import (
 
 type IFollowerController interface {
 	Follow(ctx *gin.Context)
+	GetFollowers(ctx *gin.Context)
 }
 
 type FollowerController struct {
@@ -40,4 +41,25 @@ func (c *FollowerController) Follow(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, follower)
+}
+
+func (c *FollowerController) GetFollowers(ctx *gin.Context) {
+	followeeId := getIdFromReq(ctx, "followee_id")
+	if followeeId == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get followee id"})
+		return
+	}
+
+	followersUserData, err := c.service.GetFollowers(followeeId)
+	if err != nil {
+		if err.Error() == "followers not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get followers"})
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, followersUserData)
 }
