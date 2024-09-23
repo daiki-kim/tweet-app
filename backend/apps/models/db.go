@@ -25,6 +25,7 @@ func GetModels() []interface{} {
 	return []interface{}{
 		&User{},
 		&Tweet{},
+		&Follower{},
 	}
 }
 
@@ -36,7 +37,7 @@ func NewDatabaseFactory(instance int) (db *gorm.DB, err error) {
 			"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
 			"tweet_app",
 			"tweet_password",
-			"localhost", // もしくは 'localhost'
+			"localhost",
 			3306,
 			"tweet_app_database",
 		)

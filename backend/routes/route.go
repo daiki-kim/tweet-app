@@ -20,6 +20,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	tweetService := services.NewTweetService(tweetRepository)
 	tweetController := controllers.NewTweetController(tweetService)
 
+	followerRepository := repositories.NewFollowerRepository(db)
+	followerService := services.NewFollowerService(followerRepository)
+	followerController := controllers.NewFollowerController(followerService)
+
 	r := gin.Default()
 
 	// セッションのミドルウェアを設定
@@ -54,6 +58,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 				tweetRouterWithAuth.DELETE("/:id", tweetController.DeleteTweet)
 			}
 
+			followerRouterWithAuth := v1Router.Group("/follower", middlewares.JwtTokenVerifier())
+			{
+				followerRouterWithAuth.POST("/", followerController.Follow)
+			}
 		}
 	}
 

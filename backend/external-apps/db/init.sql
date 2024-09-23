@@ -16,7 +16,7 @@ CREATE TABLE followers (
     follower_id INT NOT NULL,
     followee_id int NOT NULL,
     FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (followee_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (follower_id, followee_id)
 );
 
@@ -43,7 +43,7 @@ CREATE TABLE likes (
     tweet_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (tweet_id) REFERENCES tweets(id)
+    FOREIGN KEY (tweet_id) REFERENCES tweets(id),
     UNIQUE (user_id, tweet_id)
 );
 
