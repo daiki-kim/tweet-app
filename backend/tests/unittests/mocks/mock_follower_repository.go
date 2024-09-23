@@ -18,6 +18,14 @@ func (m *MockFollowerRepository) CreateFollower(follower *models.Follower) (*mod
 	return args.Get(0).(*models.Follower), args.Error(1)
 }
 
+func (m *MockFollowerRepository) GetFollower(id uint) (*models.Follower, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Follower), args.Error(1)
+}
+
 func (m *MockFollowerRepository) GetFollowers(followeeId uint) ([]*models.Follower, error) {
 	args := m.Called(followeeId)
 	if args.Get(0) == nil {
@@ -25,4 +33,9 @@ func (m *MockFollowerRepository) GetFollowers(followeeId uint) ([]*models.Follow
 	}
 
 	return args.Get(0).([]*models.Follower), args.Error(1)
+}
+
+func (m *MockFollowerRepository) DeleteFollower(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
 }
