@@ -78,6 +78,64 @@ func TestGetFollowerSuccess(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestGetFollowsSuccess(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo, testFollowerService := prepareTestFollowerService()
+
+	// フォロワーのユーザーデータを準備
+	testuser2 := &models.User{
+		Name:     "testuser2",
+		Email:    "test2@example.com",
+		Password: "testpassword",
+		Dob:      time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+	testuser3 := &models.User{
+		Name:     "testuser3",
+		Email:    "test3@example.com",
+		Password: "testpassword",
+		Dob:      time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+
+	// フォローモデルを準備
+	testFollower1Follows2 := &models.Follower{
+		FollowerID: 1,
+		FolloweeID: 2,
+		Follower:   nil,
+		Followee:   testuser2,
+	}
+	testFollower1Follows3 := &models.Follower{
+		FollowerID: 1,
+		FolloweeID: 3,
+		Follower:   nil,
+		Followee:   testuser3,
+	}
+
+	// モックレポジトリを呼び出し
+	mockRepo.On("GetFollowees", uint(1)).Return([]*models.Follower{testFollower1Follows2, testFollower1Follows3}, nil)
+
+	followers, err := testFollowerService.GetFollows(1)
+
+	assert.NoError(t, err)
+	assert.Equal(t, testFollower1Follows2, followers[0])
+	assert.Equal(t, testFollower1Follows3, followers[1])
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetFollowsNotFound(t *testing.T) {
+	// モックレポジトリを準備
+	mockRepo, testFollowerService := prepareTestFollowerService()
+
+	// モックレポジトリを呼び出し
+	mockRepo.On("GetFollowees", uint(1)).Return(nil, errors.New("followers not found"))
+
+	followers, err := testFollowerService.GetFollows(1)
+
+	assert.Error(t, err)
+	assert.Nil(t, followers)
+	assert.Equal(t, "followers not found", err.Error())
+	mockRepo.AssertExpectations(t)
+}
+
 func TestGetFollowersSuccess(t *testing.T) {
 	// モックレポジトリを準備
 	mockRepo, testFollowerService := prepareTestFollowerService()
@@ -128,10 +186,10 @@ func TestGetFollowersNotFound(t *testing.T) {
 	// モックレポジトリを呼び出し
 	mockRepo.On("GetFollowers", uint(1)).Return(nil, errors.New("followers not found"))
 
-	followersUserData, err := testFollowerService.GetFollowers(1)
+	followers, err := testFollowerService.GetFollowers(1)
 
 	assert.Error(t, err)
-	assert.Nil(t, followersUserData)
+	assert.Nil(t, followers)
 	assert.Equal(t, "followers not found", err.Error())
 	mockRepo.AssertExpectations(t)
 }
