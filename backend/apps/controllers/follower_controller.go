@@ -10,6 +10,7 @@ import (
 
 type IFollowerController interface {
 	Follow(ctx *gin.Context)
+	GetFollower(ctx *gin.Context)
 	GetFollowers(ctx *gin.Context)
 	DeleteFollower(ctx *gin.Context)
 }
@@ -91,4 +92,25 @@ func (c *FollowerController) DeleteFollower(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusOK)
+}
+
+func (c *FollowerController) GetFollower(ctx *gin.Context) {
+	id := getIdFromReq(ctx, "id")
+	if id == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get follower id"})
+		return
+	}
+
+	follower, err := c.service.GetFollower(id)
+	if err != nil {
+		if err.Error() == "follower not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get follower"})
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, follower)
 }

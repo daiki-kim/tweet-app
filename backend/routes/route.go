@@ -61,7 +61,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 			followerRouterWithAuth := v1Router.Group("/follower", middlewares.JwtTokenVerifier())
 			{
 				followerRouterWithAuth.POST("/", followerController.Follow)
-				followerRouterWithAuth.GET("/:followee_id", followerController.GetFollowers) // followee_idのユーザーをフォローしているユーザ一覧を取得
+				followerRouterWithAuth.GET("/:id", followerController.GetFollower)
+				followerRouterWithAuth.GET("/followers/:followee_id", followerController.GetFollowers) // followee_idのユーザーをフォローしているユーザ一覧を取得
 				followerRouterWithAuth.DELETE("/:id", followerController.DeleteFollower)
 			}
 		}

@@ -63,6 +63,50 @@ func TestFollowSuccess(t *testing.T) {
 	mockFollowerService.AssertExpectations(t)
 }
 
+func TestGetFollowerSuccess(t *testing.T) {
+	// モックサービスを準備
+	mockFollowerService, testFollowerController := prepareTestController()
+
+	// ginエンジンの設定
+	r := setupTestRouter()
+
+	// GetFollower APIを準備
+	r.GET("/api/v1/follower/:id", testFollowerController.GetFollower)
+
+	// リクエスト作成
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/follower/1", nil)
+
+	// レスポンスを準備
+	w := httptest.NewRecorder()
+
+	// Follower responseを準備
+	followerResponse := &models.Follower{
+		ID:         1,
+		FollowerID: 1,
+		FolloweeID: 2,
+		Follower:   nil,
+		Followee:   nil,
+	}
+
+	// モックサービスを準備
+	mockFollowerService.On("GetFollower", uint(1)).Return(followerResponse, nil)
+
+	// follower responseを準備
+	followerResponseJson := `{
+		"id": 1,
+		"follower_id": 1,
+		"followee_id": 2,
+		"follower": null,
+		"followee": null
+	}`
+
+	// リクエスト実行
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, followerResponseJson, w.Body.String())
+	mockFollowerService.AssertExpectations(t)
+}
+
 func TestGetFollowersSuccess(t *testing.T) {
 	// モックサービスを準備
 	mockFollowerService, testFollowerController := prepareTestController()
@@ -71,10 +115,10 @@ func TestGetFollowersSuccess(t *testing.T) {
 	r := setupTestRouter()
 
 	// GetFollowers APIを準備
-	r.GET("/api/v1/follower/:followee_id", testFollowerController.GetFollowers)
+	r.GET("/api/v1/follower/followers/:followee_id", testFollowerController.GetFollowers)
 
 	// リクエスト作成
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/follower/3", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/follower/followers/3", nil)
 
 	// レスポンスを準備
 	w := httptest.NewRecorder()
